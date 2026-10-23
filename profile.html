@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyber Arsenal | My Tools</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="logo"><a href="/" style="color: inherit; text-decoration: none;">Cyber Arsenal</a></div>
+        <nav>
+            <a href="/" class="nav-btn">Arsenal</a>
+            <a href="/news" class="nav-btn">News Feed</a>
+            <a href="/dashboard" class="nav-btn">Dashboard</a>
+        </nav>
+    </header>
+    <main>
+        <section class="hero">
+            <h1>My Submitted Tools</h1>
+            <p>Manage the tools you've added to the arsenal.</p>
+        </section>
+        
+        <div id="myToolsGrid" class="tools-grid" style="padding: 20px;">
+            <!-- Tools will be loaded here -->
+        </div>
+    </main>
+    <script>
+        fetch('/api/my-tools')
+            .then(res => res.json())
+            .then(tools => {
+                const grid = document.getElementById('myToolsGrid');
+                if(tools.length === 0) {
+                    grid.innerHTML = '<p style="text-align:center; width:100%;">You haven\'t added any tools yet. <a href="/" style="color:#00ff41;">Go add some!</a></p>';
+                    return;
+                }
+                tools.forEach(tool => {
+                    const card = document.createElement('div');
+                    card.className = 'tool-card';
+                    card.innerHTML = `
+                        <h3>${tool.name}</h3>
+                        <p>${tool.description || ''}</p>
+                        <p><strong>Category:</strong> ${tool.category || 'N/A'}</p>
+                        <div style="margin-top: 15px;">
+                            <a href="/tool/${tool.id}" class="nav-btn" style="text-decoration:none; padding: 5px 10px; font-size:0.8em;">View</a>
+                            <button onclick="deleteMyTool(${tool.id})" class="nav-btn" style="padding: 5px 10px; font-size:0.8em; border-color: #ff4d4d; color: #ff4d4d; margin-left: 10px;">Delete</button>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            })
+            .catch(() => {
+                document.getElementById('myToolsGrid').innerHTML = '<p style="text-align:center; width:100%;">Please login to view your tools.</p>';
+            });
+
+        async function deleteMyTool(id) {
+            if(!confirm('Are you sure you want to delete this tool?')) return;
+            const res = await fetch(`/api/tools/${id}`, { method: 'DELETE' });
+            if(res.ok) {
+                location.reload();
+            } else {
+                alert('Failed to delete. Please login.');
+            }
+        }
+    </script>
+</body>
+</html>

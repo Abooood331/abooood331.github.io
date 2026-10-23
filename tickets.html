@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyber Arsenal | Support Tickets</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .tickets-container { display: flex; max-width: 1000px; margin: 40px auto; height: 75vh; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; overflow: hidden; }
+        .sidebar { width: 300px; background: #111; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 15px; border-bottom: 1px solid #333; }
+        .sidebar-header input { width: 100%; padding: 10px; background: #000; border: 1px solid #38bdf8; color: #fff; margin-top: 10px; border-radius: 5px; }
+        .ticket-list { flex: 1; overflow-y: auto; }
+        .ticket-item { padding: 15px; border-bottom: 1px solid #222; cursor: pointer; transition: 0.2s; }
+        .ticket-item:hover, .ticket-item.active { background: rgba(56, 189, 248, 0.1); border-left: 4px solid #38bdf8; }
+        .ticket-item h4 { margin: 0 0 5px 0; color: #38bdf8; }
+        .ticket-item p { margin: 0; font-size: 0.8em; color: #888; }
+        
+        .chat-area { flex: 1; display: flex; flex-direction: column; }
+        .chat-header { padding: 15px; border-bottom: 1px solid #333; background: #111; }
+        .chat-header h3 { margin: 0; color: #fff; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: #0a0a0a; }
+        .message { max-width: 70%; padding: 10px 15px; border-radius: 8px; line-height: 1.4; }
+        .msg-user { background: #1e293b; color: #fff; align-self: flex-end; border-bottom-right-radius: 0; }
+        .msg-admin { background: rgba(56, 189, 248, 0.15); color: #38bdf8; align-self: flex-start; border: 1px solid #38bdf8; border-bottom-left-radius: 0; }
+        .chat-input { padding: 15px; border-top: 1px solid #333; display: flex; gap: 10px; background: #111; }
+        .chat-input input { flex: 1; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 5px; }
+        .chat-input button { padding: 10px 20px; background: #38bdf8; border: none; color: #000; font-weight: bold; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+                    <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+                        <img src="/static/images/logo.svg" alt="Logo" style="width: 35px; height: 35px;">
+                        <span style="color: #00ff41; font-family: 'Fira Code', monospace; font-size: 1.4em; font-weight: bold;">Cyber Arsenal</span>
+                    </a>
+                </div>
+        <nav><a href="/" class="nav-btn">Back to Arsenal</a></nav>
+    </header>
+    <main>
+        <div class="tickets-container">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h3 style="color:#fff; margin:0;">My Tickets</h3>
+                    <input type="text" id="newSubject" placeholder="New Ticket Subject...">
+                    <button onclick="createTicket()" style="width:100%; margin-top:10px; padding:8px; background:#00ff41; color:#000; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Create Ticket</button>
+                </div>
+                <div class="ticket-list" id="ticketList"></div>
+            </div>
+            
+            <div class="chat-area">
+                <div class="chat-header" id="chatHeader">
+                    <h3 style="color:#888;">Select a ticket to view messages</h3>
+                </div>
+                <div class="chat-messages" id="chatMessages"></div>
+                <div class="chat-input" id="chatInput" style="display:none;">
+                    <input type="text" id="replyText" placeholder="Type your reply..." onkeypress="if(event.key === 'Enter') sendReply()">
+                    <button onclick="sendReply()">Send</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        let currentTicketId = null;
+
+        function loadTickets() {
+            fetch('/api/tickets')
+                .then(res => res.json())
+                .then(tickets => {
+                    const list = document.getElementById('ticketList');
+                    list.innerHTML = '';
+                    tickets.forEach(t => {
+                        const div = document.createElement('div');
+                        div.className = `ticket-item ${currentTicketId === t.id ? 'active' : ''}`;
+                        div.onclick = () => selectTicket(t.id, t.subject);
+                        div.innerHTML = `<h4>${t.subject}</h4><p>Status: ${t.status}</p>`;
+                        list.appendChild(div);
+                    });
+                });
+        }
+
+        function createTicket() {
+            const subject = document.getElementById('newSubject').value;
+            if(!subject) return;
+            fetch('/api/tickets', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({subject})
+            }).then(() => {
+                document.getElementById('newSubject').value = '';
+                loadTickets();
+            });
+        }
+
+        function selectTicket(id, subject) {
+            currentTicketId = id;
+            loadTickets(); // باش نحدثو الـ active class
+            document.getElementById('chatHeader').innerHTML = `<h3 style="color:#fff;">${subject}</h3>`;
+            document.getElementById('chatInput').style.display = 'flex';
+            loadReplies();
+        }
+
+        function loadReplies() {
+            if(!currentTicketId) return;
+            fetch(`/api/tickets/${currentTicketId}/replies`)
+                .then(res => res.json())
+                .then(replies => {
+                    const chat = document.getElementById('chatMessages');
+                    chat.innerHTML = '';
+                    replies.forEach(r => {
+                        const div = document.createElement('div');
+                        // كنفترضو بلي "admin" هو المدير
+                        div.className = `message ${r.username === 'admin' ? 'msg-admin' : 'msg-user'}`;
+                        div.innerHTML = `<strong>${r.username}</strong><br>${r.message}`;
+                        chat.appendChild(div);
+                    });
+                    chat.scrollTop = chat.scrollHeight;
+                });
+        }
+
+        function sendReply() {
+            const text = document.getElementById('replyText').value;
+            if(!text || !currentTicketId) return;
+            fetch(`/api/tickets/${currentTicketId}/replies`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: text})
+            }).then(() => {
+                document.getElementById('replyText').value = '';
+                loadReplies();
+            });
+        }
+
+        loadTickets();
+    </script>
+</body>
+</html>

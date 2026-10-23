@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyber Arsenal | Challenge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="logo"><a href="/" style="color: inherit; text-decoration: none;">Cyber Arsenal</a></div>
+        <nav><a href="/challenges" class="nav-btn">Back to Challenges</a></nav>
+    </header>
+    <main>
+        <section class="hero">
+            <h1>Exploit: Command Injection</h1>
+            <p>Target: Cyber Ping Tool. Can you read the flag.txt file?</p>
+        </section>
+        <div style="max-width: 800px; margin: auto; background: #000; border: 2px solid #00ff41; padding: 20px;">
+            <iframe src="http://localhost:5000" style="width: 100%; height: 500px; border: none;"></iframe>
+        </div>
+    </main>
+</body>
+</html>

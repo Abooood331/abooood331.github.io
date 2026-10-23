@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyber Arsenal | AI Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .chat-container { max-width: 800px; margin: 30px auto; background: #0a0a0a; border: 2px solid #00ff41; border-radius: 10px; height: 70vh; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); }
+        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .message { padding: 10px 15px; border-radius: 5px; max-width: 80%; line-height: 1.5; }
+        .user-msg { background: #1e293b; color: #fff; align-self: flex-end; border: 1px solid #333; }
+        .ai-msg { background: rgba(0, 255, 65, 0.1); color: #00ff41; align-self: flex-start; border: 1px solid #00ff41; font-family: monospace; }
+        .input-area { display: flex; padding: 15px; border-top: 1px solid #333; background: #111; }
+        .input-area input { flex: 1; padding: 12px; background: #000; border: 1px solid #00ff41; color: #fff; border-radius: 5px; outline: none; }
+        .input-area button { margin-left: 10px; padding: 10px 20px; background: #00ff41; color: #000; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+                    <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+                        <img src="/static/images/logo.svg" alt="Logo" style="width: 35px; height: 35px;">
+                        <span style="color: #00ff41; font-family: 'Fira Code', monospace; font-size: 1.4em; font-weight: bold;">Cyber Arsenal</span>
+                    </a>
+                </div>
+        <nav><a href="/" class="nav-btn">Back to Arsenal</a></nav>
+    </header>
+    <main>
+        <div class="chat-container">
+            <div class="chat-box" id="chatBox">
+                <div class="message ai-msg">Hello Admin. I am Arsenal AI. How can I assist you today?</div>
+            </div>
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="Ask me anything..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </main>
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            const chatBox = document.getElementById('chatBox');
+            chatBox.innerHTML += `<div class="message user-msg">${text}</div>`;
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Typing indicator
+            const typingId = 'typing-' + Date.now();
+            chatBox.innerHTML += `<div class="message ai-msg" id="${typingId}">...</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: text})
+                });
+                const data = await res.json();
+                document.getElementById(typingId).remove();
+                chatBox.innerHTML += `<div class="message ai-msg">${data.reply}</div>`;
+            } catch (e) {
+                document.getElementById(typingId).remove();
+                chatBox.innerHTML += `<div class="message ai-msg" style="color:#ff4d4d; border-color:#ff4d4d;">Error connecting to AI.</div>`;
+            }
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyber Arsenal | News</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+                    <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+                        <img src="/static/images/logo.svg" alt="Logo" style="width: 35px; height: 35px;">
+                        <span style="color: #00ff41; font-family: 'Fira Code', monospace; font-size: 1.4em; font-weight: bold;">Cyber Arsenal</span>
+                    </a>
+                </div>
+        <nav><a href="/" class="nav-btn">Back to Arsenal</a>
+        <a href="https://youtube.com/@abdoedit02?si=LWcaMfq3qYovsLKK" target="_blank" class="nav-btn" style="border-color: #ff0000; color: #ff0000;">YouTube</a></nav>
+    </header>
+    <main>
+        <section class="hero">
+            <h1>Cybersecurity News</h1>
+            <p>Latest updates from the infosec world.</p>
+        </section>
+        
+        <div id="newsGrid" class="tools-grid" style="padding: 20px;">
+            <!-- News will be loaded here -->
+        </div>
+    </main>
+    <script>
+        fetch('/api/news')
+            .then(res => res.json())
+            .then(news => {
+                const grid = document.getElementById('newsGrid');
+                if(news.length === 0) {
+                    grid.innerHTML = '<p style="text-align:center; width:100%;">No news available right now.</p>';
+                    return;
+                }
+                news.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'tool-card';
+                    card.style.borderLeft = '4px solid #fbbf24'; // خط أصفر
+                    card.innerHTML = `
+                        <h3><a href="${item.link}" target="_blank" style="color:#38bdf8; text-decoration:none;">${item.title}</a></h3>
+                        <p style="color: #cbd5e1; font-size: 0.95em;">${item.description}</p>
+                        <p style="font-size:0.8em; color:#94a3b8; margin-top: auto;">Source: <strong>${item.source}</strong></p>
+                    `;
+                    grid.appendChild(card);
+                });
+            })
+            .catch(() => {
+                document.getElementById('newsGrid').innerHTML = '<p style="text-align:center; width:100%;">Failed to load news. Check your internet connection.</p>';
+            });
+    </script>
+</body>
+</html>

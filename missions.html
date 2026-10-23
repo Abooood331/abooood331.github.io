@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyber Arsenal | Missions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .mission-card { background: rgba(10, 10, 10, 0.8); border: 1px solid #fbbf24; padding: 20px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .mission-info h3 { margin: 0 0 5px 0; color: #fbbf24; }
+        .mission-info p { margin: 0; color: #888; }
+        .points-badge { background: #fbbf24; color: #000; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+        .container { max-width: 800px; margin: auto; padding: 20px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+                    <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+                        <img src="/static/images/logo.svg" alt="Logo" style="width: 35px; height: 35px;">
+                        <span style="color: #00ff41; font-family: 'Fira Code', monospace; font-size: 1.4em; font-weight: bold;">Cyber Arsenal</span>
+                    </a>
+                </div>
+        <nav>
+            <a href="/" class="nav-btn">Arsenal</a>
+            <a href="/challenges" class="nav-btn" style="border-color:#38bdf8; color:#38bdf8;">CTF</a>
+            <a href="/leaderboard" class="nav-btn" style="border-color:#ff4d4d; color:#ff4d4d;">Leaderboard</a>
+        </nav>
+    </header>
+    <main>
+        <section class="hero">
+            <h1>Missions</h1>
+            <p>Complete missions to earn points and climb the leaderboard.</p>
+            <h2 style="color: #00ff41; margin-top: 20px;">My Points: <span id="myPoints">0</span></h2>
+        </section>
+        <div class="container" id="missionsList"></div>
+    </main>
+    <script>
+        fetch('/api/missions')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('myPoints').innerText = data.my_points;
+                const list = document.getElementById('missionsList');
+                data.missions.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = 'mission-card';
+                    div.innerHTML = `
+                        <div class="mission-info">
+                            <h3>${m.title}</h3>
+                            <p>${m.description}</p>
+                        </div>
+                        <div class="points-badge">+${m.points} pts</div>
+                    `;
+                    list.appendChild(div);
+                });
+            });
+    </script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyber Arsenal | 1v1 Tic-Tac-Toe</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .game-container { max-width: 500px; margin: 50px auto; text-align: center; background: #0a0a0a; padding: 20px; border: 2px solid #00ff41; border-radius: 10px; }
+        .board { display: grid; grid-template-columns: repeat(3, 100px); gap: 5px; justify-content: center; margin: 20px 0; }
+        .cell { width: 100px; height: 100px; background: #111; border: 1px solid #333; display: flex; justify-content: center; align-items: center; font-size: 40px; font-family: 'Fira Code', monospace; color: #00ff41; cursor: pointer; transition: 0.2s; }
+        .cell:hover { background: #1a1a1a; }
+        .status { color: #fbbf24; font-size: 1.2em; font-family: monospace; margin-bottom: 20px; height: 30px; }
+        #roomInput { padding: 10px; background: #000; border: 1px solid #00ff41; color: #fff; border-radius: 5px; margin-bottom: 10px; width: 80%; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo"><a href="/" style="color: inherit; text-decoration: none;">Cyber Arsenal</a></div>
+        <nav><a href="/" class="nav-btn">Back to Arsenal</a></nav>
+    </header>
+    <main>
+        <div class="game-container">
+            <h1 style="color:#00ff41;">1v1 Tic-Tac-Toe</h1>
+            <p class="status" id="status">Enter a room name and share it with a friend.</p>
+            <input type="text" id="roomInput" placeholder="Room Name (e.g. room1)">
+            <button onclick="joinGame()" class="nav-btn" style="margin-top: 10px;">Join Game</button>
+            
+            <div class="board" id="board" style="display: none;">
+                <div class="cell" onclick="makeMove(0)"></div>
+                <div class="cell" onclick="makeMove(1)"></div>
+                <div class="cell" onclick="makeMove(2)"></div>
+                <div class="cell" onclick="makeMove(3)"></div>
+                <div class="cell" onclick="makeMove(4)"></div>
+                <div class="cell" onclick="makeMove(5)"></div>
+                <div class="cell" onclick="makeMove(6)"></div>
+                <div class="cell" onclick="makeMove(7)"></div>
+                <div class="cell" onclick="makeMove(8)"></div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        let mySymbol = null;
+        let currentTurn = 'X';
+        let currentRoom = '';
+        let username = "{{ session.get('username', 'Guest') }}";
+
+        socket.on('player_joined', (data) => {
+            document.getElementById('status').innerText = `${data.username} joined. Waiting for opponent... (${data.count}/2)`;
+            if (data.username === username) {
+                mySymbol = data.symbol;
+            }
+        });
+
+        socket.on('game_start', (data) => {
+            document.getElementById('status').innerText = `Game started! You are ${mySymbol}. Turn: ${data.turn}`;
+            document.getElementById('board').style.display = 'grid';
+            currentTurn = data.turn;
+        });
+
+        socket.on('move_made', (data) => {
+            const cell = document.querySelectorAll('.cell')[data.index];
+            cell.innerText = data.symbol;
+            currentTurn = data.turn;
+            document.getElementById('status').innerText = `Turn: ${currentTurn}`;
+            if (checkWin()) {
+                document.getElementById('status').innerText = `${data.symbol} Wins!`;
+                socket.disconnect();
+            }
+        });
+
+        socket.on('game_full', (data) => alert(data.message));
+        socket.on('player_left', (data) => document.getElementById('status').innerText = data.message);
+
+        function joinGame() {
+            currentRoom = document.getElementById('roomInput').value;
+            if (!currentRoom) return;
+            socket.emit('join_game', { username: username, room: currentRoom });
+            document.getElementById('status').innerText = 'Joined room. Waiting for opponent...';
+        }
+
+        function makeMove(index) {
+            if (document.querySelectorAll('.cell')[index].innerText !== '') return;
+            if (mySymbol !== currentTurn) return;
+            socket.emit('make_move', { room: currentRoom, index: index, symbol: mySymbol });
+        }
+
+        function checkWin() {
+            const cells = Array.from(document.querySelectorAll('.cell')).map(c => c.innerText);
+            const winPatterns = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
+            for (let p of winPatterns) {
+                if (cells[p[0]] && cells[p[0]] === cells[p[1]] && cells[p[0]] === cells[p[2]]) return true;
+            }
+            return false;
+        }
+    </script>
+</body>
+</html>

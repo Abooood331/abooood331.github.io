@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyber Arsenal | Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+                    <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+                        <img src="/static/images/logo.svg" alt="Logo" style="width: 35px; height: 35px;">
+                        <span style="color: #00ff41; font-family: 'Fira Code', monospace; font-size: 1.4em; font-weight: bold;">Cyber Arsenal</span>
+                    </a>
+                </div>
+        <nav>
+            <a href="/" class="nav-btn">Arsenal</a>
+            <a href="/news" class="nav-btn">News Feed</a>
+        </nav>
+    </header>
+    <main>
+        <section class="hero">
+            <h1>User Dashboard</h1>
+            <p>Welcome back, <span id="usernameDisplay" style="color: #fbbf24;"></span></p>
+        </section>
+        
+        <div class="tools-grid" style="padding: 20px;">
+            <!-- Stats Card -->
+            <div class="tool-card">
+                <h3>My Stats</h3>
+                <p><strong>Total Tools Added:</strong> <span id="toolsAdded">0</span></p>
+                <p><strong>Total Favorites:</strong> <span id="favsAdded">0</span></p>
+            </div>
+            
+            <!-- Actions Card -->
+            <div class="tool-card">
+                <h3>Quick Actions</h3>
+                <a href="/" class="nav-btn" style="display: block; text-align: center; margin-top: 10px;">Add New Tool</a>
+                <button onclick="logout()" class="nav-btn" style="width: 100%; margin-top: 10px; border-color: #ff4d4d; color: #ff4d4d;">Logout</button>
+            </div>
+        </div>
+    </main>
+    <script>
+        fetch('/api/me')
+            .then(res => res.json())
+            .then(user => {
+                if(user.error) { window.location.href = '/'; return; }
+                document.getElementById('usernameDisplay').innerText = user.username;
+            });
+
+        fetch('/api/dashboard/stats')
+            .then(res => res.json())
+            .then(stats => {
+                document.getElementById('toolsAdded').innerText = stats.tools;
+                document.getElementById('favsAdded').innerText = stats.favorites;
+            });
+
+        async function logout() {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
