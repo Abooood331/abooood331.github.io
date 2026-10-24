@@ -1,98 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Arsenal</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <header>
-        <div class="logo" style="display:flex; align-items:center; gap:10px;"><img src="/static/images/logo.svg" style="width:35px;height:35px;"><span>Cyber Arsenal</span></div>
-        <a href="/news" class="nav-btn">News Feed</a>
-        <a href="/challenges" class="nav-btn" style="border-color: #38bdf8; color: #38bdf8;">CTF Challenges</a>
-        <a href="/global_chat" class="nav-btn" style="border-color: #ff4d4d; color: #ff4d4d;">Global Chat</a>
-        <a href="/tickets" class="nav-btn" style="border-color: #00ff41; color: #00ff41;">Support Tickets</a>
-        <a href="/deepbot" class="nav-btn" style="border-color: #ff4d4d; color: #ff4d4d; box-shadow: 0 0 10px #ff4d4d;">Deep Scan Bot</a>
-        <a href="/sandbox" class="nav-btn" style="border-color: #38bdf8; color: #38bdf8;">Tool Sandbox</a>
-        <a href="/chat" class="nav-btn" style="border-color: #fbbf24; color: #fbbf24;">AI Assistant</a>
-        <a href="/missions" class="nav-btn" style="border-color: #fbbf24; color: #fbbf24;">Missions</a>
-        <a href="/leaderboard" class="nav-btn" style="border-color: #ff4d4d; color: #ff4d4d;">Leaderboard</a>
-        <a href="/teams" class="nav-btn" style="border-color: #38bdf8; color: #38bdf8;">Teams</a>
-        <a href="/snake" class="nav-btn" style="border-color: #fbbf24; color: #fbbf24;">Play Snake</a>
+{% extends 'base.html' %}
+{% block content %}
+    <h1 style="text-align: center; margin-bottom: 30px; text-shadow: 0 0 20px rgba(0,255,65,0.3);">Available Tools</h1>
+    
+    <!-- Search & Filter Bar -->
+    <form method="GET" action="/" class="card" style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 30px; padding: 15px;">
+        <input type="text" name="search" placeholder="Search tools by name or description..." value="{{ search_query }}" style="flex: 2; min-width: 200px; margin: 0;">
         
-        <a href="https://youtube.com/@abdoedit02?si=LWcaMfq3qYovsLKK" target="_blank" class="nav-btn" style="border-color: #ff0000; color: #ff0000;">YouTube</a>
-        <nav id="authNav"><button id="authBtn">Login/Register</button></nav>
-    </header>
-    <main>
-        <section class="hero">
-            <h1>Cyber Arsenal</h1>
-            <p>Your central repository for cybersecurity tools and scripts.</p>
-            <button id="addToolBtn">Add New Tool</button>
-        </section>
+        <select name="category" style="flex: 1; min-width: 150px; margin: 0;">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+                <option value="{{ cat }}" {% if cat == current_category %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+        </select>
         
-        <input type="text" id="searchBar" placeholder="Search tools...">
+        <button type="submit" style="margin: 0; padding: 12px 25px; border-color: var(--secondary); color: var(--secondary);">Filter</button>
+        <a href="/" class="nav-btn" style="margin: 0; padding: 10px 15px; border-color: var(--danger); color: var(--danger); text-decoration: none;">Clear</a>
+    </form>
 
-        <div class="filter-tabs">
-            <button class="tab-btn active" onclick="switchTab('all')">All Tools</button>
-            <button class="tab-btn" onclick="switchTab('favorites')">My Favorites</button>
-        </div>
-        
-        <section id="toolsGrid" class="tools-grid"></section>
-    </main>
-
-    <div id="authModal" class="modal hidden">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('authModal')">&times;</span>
-            <div class="tabs">
-                <button onclick="showTab('login')">Login</button>
-                <button onclick="showTab('register')">Register</button>
+    <div class="grid">
+        {% for tool in tools %}
+            <div class="card">
+                <h3 style="margin-top: 0; color: var(--primary);">{{ tool.name }}</h3>
+                <p style="color: var(--text-muted);">{{ tool.description }}</p>
+                <p><strong>Category:</strong> <span style="color: var(--secondary);">{{ tool.category }}</span></p>
+                <a href="{{ tool.link }}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: bold;">[ Access Tool ]</a>
             </div>
-            <form id="loginForm" class="tab-content">
-                <h2>Login</h2>
-                <input type="text" name="username" placeholder="Username" required>
-                <input type="password" name="password" placeholder="Password" required>
-                <button type="submit">Login</button>
-            </form>
-            <form id="registerForm" class="tab-content hidden">
-                <h2>Register</h2>
-                <input type="text" name="username" placeholder="Username" required>
-                <input type="email" name="email" placeholder="Email" required>
-                <input type="password" name="password" placeholder="Password" required>
-                <button type="submit">Register</button>
-            </form>
-        </div>
+        {% else %}
+            <div class="card" style="text-align: center; grid-column: 1 / -1;">
+                <p>No tools found matching your search.</p>
+            </div>
+        {% endfor %}
     </div>
 
-    <div id="toolModal" class="modal hidden">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('toolModal')">&times;</span>
-            <h2 id="toolModalTitle">Add New Tool</h2>
-            <form id="toolForm" enctype="multipart/form-data">
-                <input type="hidden" id="toolId" name="id">
+    {% if current_user.is_authenticated %}
+        <div class="card" style="margin-top: 40px; border-color: var(--secondary);">
+            <h2 style="color: var(--secondary); margin-top: 0;">Add New Tool</h2>
+            <form method="POST" action="/add_tool">
                 <input type="text" name="name" placeholder="Tool Name" required>
                 <textarea name="description" placeholder="Description"></textarea>
-                <input type="text" name="category" placeholder="Category">
-                <input type="url" name="link" placeholder="Link (e.g., GitHub)">
-                <textarea name="installation" placeholder="Installation steps (e.g., apt install nmap)"></textarea>
-                <label>Upload Script (Optional):</label>
-                <input type="file" name="file">
-                <button type="submit">Submit</button>
+                <input type="text" name="category" placeholder="Category (e.g. Recon)">
+                <input type="text" name="link" placeholder="Link (GitHub / Website)">
+                <button type="submit" style="border-color: var(--secondary); color: var(--secondary); width: 100%;">Add Tool</button>
             </form>
         </div>
-    </div>
-    
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-        <script>
-            const socket = io();
-            socket.on('notification', function(data) {
-                const toast = document.createElement('div');
-                toast.style.cssText = 'position:fixed; top:20px; right:20px; background:#0a0a0a; border:2px solid #00ff41; color:#00ff41; padding:15px; border-radius:5px; z-index:9999; font-family:monospace; box-shadow:0 0 10px #00ff41;';
-                toast.innerText = data.message;
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 5000);
-            });
-        </script>
-        </body>
-</html>
+    {% endif %}
+{% endblock %}

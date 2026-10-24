@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1 style="text-align: center; color: var(--accent); text-shadow: 0 0 10px var(--accent); margin-bottom: 40px;">Security Cheatsheets</h1>
+    <div class="grid">
+        {% for s in sheets %}
+            <div class="card" style="border-color: var(--accent); display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h3 style="color: var(--primary);">{{ s.title }}</h3>
+                    <p style="color: var(--text-muted);">{{ s.description }}</p>
+                </div>
+                <a href="/cheatsheet/{{ s.id }}" class="nav-btn" style="border-color: var(--accent); color: var(--accent); text-align: center; margin-top: 15px;">View Cheatsheet →</a>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

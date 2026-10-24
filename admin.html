@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; }
+    .stat-card { background: var(--panel-bg); border: 1px solid var(--primary); padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 0 15px rgba(0,255,65,0.1); }
+    .stat-card h3 { font-size: 2.5em; margin: 0; color: var(--primary); }
+    .stat-card p { color: var(--text-muted); margin: 5px 0 0 0; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: #111; color: var(--primary); }
+    .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+    .btn-danger:hover { background: var(--danger); color: #000; }
+</style>
+
+<h1 style="text-align: center; margin-bottom: 40px;">Admin Dashboard</h1>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>{{ users_count }}</h3>
+        <p>Total Users</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ tools_count }}</h3>
+        <p>Total Tools</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ visitors_count }}</h3>
+        <p>Total Visitors</p>
+    </div>
+</div>
+
+<h2>Recent Visitors</h2>
+    <table style="margin-bottom: 40px;">
+        <thead>
+            <tr>
+                <th>IP Address</th>
+                <th>User Agent</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for v in recent_visitors %}
+            <tr>
+                <td>{{ v.ip }}</td>
+                <td style="font-size:0.8em; color:#888;">{{ v.user_agent }}</td>
+                <td>{{ v.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <h2>Manage Tools</h2>
+<a href="/admin/review_submissions" class="nav-btn" style="border-color: var(--accent); color: var(--accent); margin-bottom: 20px; display: inline-block;">Review Pending Submissions</a>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for tool in tools %}
+        <tr>
+            <td>{{ tool.id }}</td>
+            <td>{{ tool.name }}</td>
+            <td>{{ tool.category }}</td>
+            <td>
+                <form method="POST" action="/admin/delete_tool/{{ tool.id }}" style="display:inline;">
+                    <button type="submit" class="btn-danger" onclick="return confirm('Delete this tool?')">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>Manage Users</h2>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{% if user.is_admin %}<span style="color:var(--primary);">Admin</span>{% else %}User{% endif %}</td>
+            <td>
+                {% if not user.is_admin %}
+                <form method="POST" action="/admin/delete_user/{{ user.id }}" style="display:inline;">
+                    <button type="submit" class="btn-danger" onclick="return confirm('Delete this user?')">Delete</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

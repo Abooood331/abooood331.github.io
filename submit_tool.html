@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1 style="color: var(--primary);">Submit a Tool</h1>
+    <p style="color: var(--text-muted);">Share your own tools with the community. An admin will review them before they appear in the arsenal.</p>
+    
+    <div class="card" style="border-color: var(--secondary);">
+        <form method="POST">
+            <input type="text" name="name" placeholder="Tool Name" required>
+            <textarea name="description" placeholder="Description"></textarea>
+            <input type="text" name="category" placeholder="Category (e.g. Recon, Exploitation)">
+            <input type="text" name="link" placeholder="Link (GitHub / Website)">
+            <button type="submit" style="background: var(--secondary); color: #fff; border: none; width: 100%;">Submit for Review</button>
+        </form>
+    </div>
+
+    <h2 style="margin-top: 40px;">My Submissions</h2>
+    <div class="grid">
+        {% for sub in submissions %}
+            <div class="card">
+                <h3 style="color: var(--primary);">{{ sub.name }}</h3>
+                <p><span style="color: {% if sub.status == 'pending' %}var(--accent){% elif sub.status == 'approved' %}#10b981{% else %}var(--secondary){% endif %}; font-weight: bold;">Status: {{ sub.status|upper }}</span></p>
+                <p style="color: var(--text-muted);">{{ sub.description }}</p>
+            </div>
+        {% else %}
+            <p>You haven't submitted any tools yet.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

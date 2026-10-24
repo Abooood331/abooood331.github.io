@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1 style="color: var(--secondary);">Review Submissions</h1>
+    <div class="grid">
+        {% for sub in submissions %}
+            <div class="card" style="border-color: var(--accent);">
+                <h3 style="color: var(--primary);">{{ sub.name }}</h3>
+                <p>{{ sub.description }}</p>
+                <p><strong>Category:</strong> {{ sub.category }}</p>
+                <a href="{{ sub.link }}" target="_blank" style="color: var(--primary);">View Link</a>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <form method="POST" action="/admin/approve_submission/{{ sub.id }}" style="flex: 1;">
+                        <button type="submit" style="background: #10b981; color: #000; border: none; width: 100%;">Approve</button>
+                    </form>
+                    <form method="POST" action="/admin/reject_submission/{{ sub.id }}" style="flex: 1;">
+                        <button type="submit" style="background: var(--secondary); color: #fff; border: none; width: 100%;">Reject</button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <p>No pending submissions.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

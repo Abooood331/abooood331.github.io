@@ -1,80 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Cyber Arsenal | CTF Challenges</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        .challenge-card { background: #111; border: 1px solid #38bdf8; padding: 20px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .challenge-info h3 { margin: 0 0 5px 0; color: #38bdf8; }
-        .challenge-info p { margin: 0; color: #888; font-size: 0.9em; }
-        .challenge-actions { display: flex; gap: 10px; align-items: center; }
-        .flag-input { padding: 8px; border: 1px solid #333; background: #000; color: #fff; border-radius: 4px; }
-        .points { color: #fbbf24; font-weight: bold; }
-        .solved { color: #00ff41; font-weight: bold; }
-        .container { max-width: 800px; margin: auto; padding: 20px; }
-    </style>
-</head>
-<body>
-    <header>
-        <div class="logo" style="display: flex; align-items: center; gap: 10px;">
-                    <a href="/" style="display: flex; align-items: center; text-decoration: none;">
-                        <img src="/static/images/logo.svg" alt="Logo" style="width: 35px; height: 35px;">
-                        <span style="color: #00ff41; font-family: 'Fira Code', monospace; font-size: 1.4em; font-weight: bold;">Cyber Arsenal</span>
-                    </a>
-                </div>
-        <nav><a href="/" class="nav-btn">Back to Arsenal</a></nav>
-    </header>
-    <main>
-        <section class="hero">
-            <h1>CTF Challenges</h1>
-            <p>Solve the challenges and submit the flag to earn points.</p>
-        </section>
-        <div class="container" id="challengesList">
-            <!-- Challenges loaded here -->
-        </div>
-    </main>
-    <script>
-        fetch('/api/challenges')
-            .then(res => res.json())
-            .then(challenges => {
-                const list = document.getElementById('challengesList');
-                challenges.forEach(c => {
-                    const div = document.createElement('div');
-                    div.className = 'challenge-card';
-                    div.innerHTML = `
-                        <div class="challenge-info">
-                            <h3>${c.title} <span style="font-size:0.6em; color:#666;">(${c.category})</span></h3>
-                            <p>${c.description}</p>\n${c.title === "Exploit The Ping Tool" ? `<a href="/challenge/ping" class="nav-btn" style="display:inline-block; margin-top:10px; border-color:#00ff41; color:#00ff41;">Launch Target</a>` : ""}
-                        </div>
-                        <div class="challenge-actions">
-                            <span class="points">${c.points} pts</span>
-                            ${c.solved ? '<span class="solved">✔ Solved</span>' : 
-                                `<input type="text" class="flag-input" id="flag-${c.id}" placeholder="flag{...}">
-                                 <button onclick="submitFlag(${c.id})" class="nav-btn" style="padding: 8px 12px; font-size: 0.9em;">Submit</button>`
-                            }
-                        </div>
-                    `;
-                    list.appendChild(div);
-                });
-            });
-
-        async function submitFlag(id) {
-            const flag = document.getElementById(`flag-${id}`).value;
-            if(!flag) return;
-            const res = await fetch('/api/challenges/submit', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({id, flag})
-            });
-            const data = await res.json();
-            if(res.ok) {
-                alert(data.message);
-                location.reload();
-            } else {
-                alert(data.message);
-            }
-        }
-    </script>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block content %}
+    <h1 style="text-align: center;">CTF Challenges</h1>
+    <div class="grid">
+        {% for c in challenges %}
+            <div class="card">
+                <h3 style="color: var(--secondary);">{{ c.title }}</h3>
+                <p>{{ c.description }}</p>
+                <p><strong>Points:</strong> {{ c.points }}</p>
+                <form method="POST" action="/submit_challenge/{{ c.id }}">
+                    <input type="text" name="flag" placeholder="flag{...}" required>
+                    <button type="submit" style="width: 100%;">Submit</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

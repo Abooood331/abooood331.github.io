@@ -1,86 +1,27 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Cyber Arsenal | Global Chat</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        .chat-container { max-width: 800px; margin: 40px auto; background: #0a0a0a; border: 2px solid #00ff41; border-radius: 10px; height: 75vh; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); }
-        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .message { padding: 10px 15px; border-radius: 5px; max-width: 80%; line-height: 1.4; font-family: 'Fira Code', monospace; }
-        .msg-self { background: rgba(0, 255, 65, 0.2); color: #00ff41; align-self: flex-end; border: 1px solid #00ff41; }
-        .msg-other { background: #1e293b; color: #fff; align-self: flex-start; border: 1px solid #333; }
-        .msg-header { font-size: 0.8em; color: #888; margin-bottom: 5px; display: block; }
-        .chat-input { padding: 15px; border-top: 1px solid #333; display: flex; gap: 10px; background: #111; }
-        .chat-input input { flex: 1; padding: 12px; background: #000; border: 1px solid #00ff41; color: #fff; border-radius: 5px; font-family: 'Fira Code', monospace; }
-        .chat-input button { padding: 10px 20px; background: #00ff41; border: none; color: #000; font-weight: bold; border-radius: 5px; cursor: pointer; }
-    </style>
-</head>
-<body>
-    <header>
-        <div class="logo" style="display: flex; align-items: center; gap: 10px;">
-                    <a href="/" style="display: flex; align-items: center; text-decoration: none;">
-                        <img src="/static/images/logo.svg" alt="Logo" style="width: 35px; height: 35px;">
-                        <span style="color: #00ff41; font-family: 'Fira Code', monospace; font-size: 1.4em; font-weight: bold;">Cyber Arsenal</span>
-                    </a>
-                </div>
-        <nav><a href="/" class="nav-btn">Back to Arsenal</a></nav>
-    </header>
-    <main>
-        <div class="chat-container">
-            <div class="chat-messages" id="chatBox">
-                <!-- Messages will appear here -->
-            </div>
-            <div class="chat-input">
-                <input type="text" id="userInput" placeholder="Type a message..." onkeypress="if(event.key === 'Enter') sendMessage()">
-                <button onclick="sendMessage()">Send</button>
-            </div>
-        </div>
-    </main>
+{% extends 'base.html' %}
+{% block content %}
+    <h1>Global Chat</h1>
+    <div class="card" style="height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;" id="chatBox"></div>
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <input type="text" id="msgInput" placeholder="Type a message..." style="flex: 1; margin: 0;">
+        <button onclick="sendMsg()">Send</button>
+    </div>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
-        const currentUser = "{{ session['username'] }}"; // نجيبو سمية المستخدم من السيرفر
-
-        function loadMessages() {
-            fetch('/api/global_chat')
-                .then(res => res.json())
-                .then(messages => {
-                    const box = document.getElementById('chatBox');
-                    const isScrolledToBottom = box.scrollHeight - box.clientHeight <= box.scrollTop + 50;
-                    
-                    box.innerHTML = '';
-                    messages.forEach(msg => {
-                        const div = document.createElement('div');
-                        div.className = `message ${msg.username === currentUser ? 'msg-self' : 'msg-other'}`;
-                        div.innerHTML = `<span class="msg-header"></span><span class="msg-body"></span>`;
-                        div.querySelector(".msg-header").textContent = msg.username;
-                        div.querySelector(".msg-body").textContent = msg.message;
-                        box.appendChild(div);
-                    });
-                    
-                    if(isScrolledToBottom) {
-                        box.scrollTop = box.scrollHeight;
-                    }
-                });
+        const socket = io();
+        socket.on('receive_message', (data) => {
+            const box = document.getElementById('chatBox');
+            const div = document.createElement('div');
+            div.style.cssText = 'padding: 10px; border-bottom: 1px solid #333;';
+            div.innerHTML = `<strong style="color: ${data.username === '{{ current_user.username }}' ? '#00ff41' : '#38bdf8'}">${data.username}:</strong> ${data.message}`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        });
+        function sendMsg() {
+            const input = document.getElementById('msgInput');
+            if(input.value.trim() === '') return;
+            socket.emit('send_message', { message: input.value });
+            input.value = '';
         }
-
-        function sendMessage() {
-            const input = document.getElementById('userInput');
-            const text = input.value.trim();
-            if(!text) return;
-            
-            fetch('/api/global_chat', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({message: text})
-            }).then(() => {
-                input.value = '';
-                loadMessages();
-            });
-        }
-
-        // نحدثو الرسائل كل ثانية (Polling)
-        setInterval(loadMessages, 1000);
-        loadMessages();
     </script>
-</body>
-</html>
+{% endblock %}
